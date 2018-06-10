@@ -5,6 +5,8 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "nvs.h"
+//#include "controller.h"
 
 #include "esp_system.h"
 #include "esp_spi_flash.h"
@@ -18,9 +20,20 @@
 #include "nvs_flash.h"
 #include "esp_event_loop.h"
 
+#include <driver/adc.h>
+#include "esp_adc_cal.h"
+
+#include "esp_bt.h"
+#include "esp_bt_main.h"
+#include "esp_bt_device.h"
+#include "esp_bt_defs.h"
+
+
 #define MOSI_PIN 13
 #define SCLK_PIN 14
 #define LCD_SPEED_HZ 1500
+
+static const char *tag = "BLE_ADV";
 
 const char CLEAR[2] = {0xFE, 0x51};
 
@@ -134,12 +147,43 @@ void on_indication() {
 
 }
 
-void app_main() {
-    on_indication();
-	spi_device_handle_t display = hspi_enable();
-	wifiSetup();
-	lcd_write(display, "Connected.");
+uint8_t * bt_setup() {
+    esp_bluedroid_init();
+    esp_bluedroid_enable();
+    esp_bt_dev_set_device_name("ESP-32");
+    return esp_bt_dev_get_address();
 
+}
+
+void app_main() {
+
+	spi_device_handle_t display = hspi_enable();
+	// wifiSetup();
+//	char * out = malloc(20);
+//	static esp_adc_cal_characteristics_t *adc_chars;
+//	static const adc_channel_t channel = ADC_CHANNEL_6;     //GPIO34 if ADC1, GPIO14 if ADC2
+//	static const adc_atten_t atten = ADC_ATTEN_DB_11; // FS 3.9V -> limited by VDD
+//	static const adc_unit_t unit = ADC_UNIT_1;
+//
+//	adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
+//	esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, 1100, adc_chars);
+//
+//	uint32_t adc_reading = 0;
+//	for(int i = 0; i < 10; i++) { // 10 samples
+//	    adc_reading += adc1_get_raw((adc_channel_t)channel);
+//	}
+//	adc_reading /= 10; // Divide and conquer
+//
+//	float voltage = adc_reading / 4096.0 * 3.9;
+//	sprintf(out, "%f", voltage);
+//
+//	lcd_write(display, out);
+
+	uint8_t * addr = bt_setup();
+
+
+	lcd_write(display, (char *)addr);
+	on_indication();
 	gpio_set_direction(GPIO_NUM_15, GPIO_MODE_OUTPUT);
 	int level = 0;
 	for(;;) {
