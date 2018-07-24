@@ -21,12 +21,16 @@ const char NAME[3] = "TST";
 const char TYPE[3] = "VMM";
 
 extern sensor_dat_t rsp_dat;
+extern int DHT_DATA[];
 
 void temp_humidity() {
     uint32_t dat[2] = {0}; // Give temp in C, humidity
-    dat[0] = getTemp();
-    dat[1] = getHumidity();
-    printf("Temp %d, Humid %d\n", dat[0], dat[1]);
+    printf("Temp %d, Humid %d\n", DHT_DATA[0], DHT_DATA[1]);
+
+    getData();
+    dat[0] = (uint32_t) DHT_DATA[1]; // temp in F
+    dat[1] = (uint32_t) DHT_DATA[2]; // humidity (%)
+
     bluetoothify(dat, 2);
 }
 
@@ -57,7 +61,7 @@ void adc_read_update(esp_adc_cal_characteristics_t * config) {
     bluetoothify(&milis, 1);
 }
 
-void bluetoothify(uint32_t data[], int data_len) { // TODO: Add name, type parameters, better protocol
+void bluetoothify(const uint32_t data[], int data_len) { // TODO: Add name, type parameters, better protocol
     // Allocate space
     uint8_t serialized[64];
     int j = 0; // Need external counter

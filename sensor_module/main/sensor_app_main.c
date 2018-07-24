@@ -36,11 +36,10 @@ void app_main()
                  // Using ADC for testing, reads voltage off of potentiometer
     setDHTPin(18);
 
-    for(;;) { // TBD: Use low-power mode, wake on a timer interrupt to read data.
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
+    for(;;) {
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
 
         //adc_read_update(config);
         temp_humidity();
-
     }
 }
