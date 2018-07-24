@@ -22,6 +22,7 @@ void bt_setup();
 // Sensor readings
 esp_adc_cal_characteristics_t * adc_setup();
 void adc_read_update(esp_adc_cal_characteristics_t * config);
-void bluetoothify(uint32_t data);
+void bluetoothify(uint32_t data[], int data_len);
+void temp_humidity();
 
 #endif /* MAIN_SENSORCTL_H_ */

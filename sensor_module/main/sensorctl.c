@@ -13,6 +13,7 @@
 #include "esp_adc_cal.h"
 
 #include "sensorctl.h"
+#include "DHT11.h"
 
 #define SAMPLES 16 //16x multisampling/averaging
 
@@ -20,6 +21,14 @@ const char NAME[3] = "TST";
 const char TYPE[3] = "VMM";
 
 extern sensor_dat_t rsp_dat;
+
+void temp_humidity() {
+    uint32_t dat[2] = {0}; // Give temp in C, humidity
+    dat[0] = getTemp();
+    dat[1] = getHumidity();
+    printf("Temp %d, Humid %d\n", dat[0], dat[1]);
+    bluetoothify(dat, 2);
+}
 
 esp_adc_cal_characteristics_t * adc_setup() {
     // Configuration variables
@@ -45,32 +54,40 @@ void adc_read_update(esp_adc_cal_characteristics_t * config) {
     reading /= SAMPLES; // Avg data
     uint32_t milis = esp_adc_cal_raw_to_voltage(reading, config);
 
-    bluetoothify(milis);
+    bluetoothify(&milis, 1);
 }
 
-void bluetoothify(uint32_t data) { // TODO: Add name, type parameters, better protocol
+void bluetoothify(uint32_t data[], int data_len) { // TODO: Add name, type parameters, better protocol
     // Allocate space
     uint8_t serialized[64];
-    int i = 0; // Need external counter
-    uint32_t mask = 0xFF;
+    int j = 0; // Need external counter
+    uint32_t curr;
+    uint32_t mask = 0xFF; // Bottom 8 bits
 
-    for( ; i < 3; i++) {
+    /*for( ; i < 3; i++) {
         serialized[i] = NAME[i];
     }
 
-    serialized[i++] = '_';
+    serialized[i++] = '_';*/
+    do { // Go through all data
+        curr = data[j];
+        printf("curr = %u\n", curr);
+        for(int i = 0; i < 4; i++) { // Shift and mask
+            serialized[i] = curr & mask;
+            curr >>= 8;
+        }
+        j++;
+    } while(j < data_len);
 
-    do { // Shift and mask
-        serialized[i++] = data & mask;
-        data >>= 8;
-    } while(data != 0);
-
-    serialized[i++] = '_';
+    /*serialized[i++] = '_';
 
     for(int j = 0; j < 3; j++, i++) {
         serialized[i] = NAME[j];
-    }
+    }*/
+    /*for(int k = 0; k < 4 * data_len; k++) {
+        printf("data[%d] = %d\n", k, serialized[k]);
+    }*/
 
-    rsp_dat.len = i;
+    rsp_dat.len = 4 * data_len;
     memcpy(rsp_dat.dat, serialized, rsp_dat.len);
 }

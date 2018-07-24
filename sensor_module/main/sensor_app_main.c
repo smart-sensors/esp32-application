@@ -21,6 +21,7 @@
 
 // Other includes
 #include "sensorctl.h"
+#include "DHT11.h"
 
 
 sensor_dat_t rsp_dat = {
@@ -31,12 +32,15 @@ sensor_dat_t rsp_dat = {
 void app_main()
 {
     bt_setup();
-    esp_adc_cal_characteristics_t * config = adc_setup(); // Our dummy "sensor"
+    //esp_adc_cal_characteristics_t * config = adc_setup(); // Our dummy "sensor"
                  // Using ADC for testing, reads voltage off of potentiometer
-
+    setDHTPin(18);
 
     for(;;) { // TBD: Use low-power mode, wake on a timer interrupt to read data.
         vTaskDelay(10000 / portTICK_PERIOD_MS);
-        adc_read_update(config);
+
+        //adc_read_update(config);
+        temp_humidity();
+
     }
 }
