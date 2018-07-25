@@ -6,6 +6,9 @@
 
 #include <string.h>
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 #include "esp_system.h"
 #include "esp_spi_flash.h"
 
@@ -17,17 +20,16 @@
 
 #define SAMPLES 16 //16x multisampling/averaging
 
-const char NAME[3] = "TST";
-const char TYPE[3] = "VMM";
 
 extern sensor_dat_t rsp_dat;
 extern int DHT_DATA[];
 
 void temp_humidity() {
     uint32_t dat[2] = {0}; // Give temp in C, humidity
-    printf("Temp %d, Humid %d\n", DHT_DATA[0], DHT_DATA[1]);
+    //printf("Temp %d, Humid %d\n", DHT_DATA[1], DHT_DATA[2]);
 
     getData();
+    vTaskDelay(10/portTICK_PERIOD_MS);
     dat[0] = (uint32_t) DHT_DATA[1]; // temp in F
     dat[1] = (uint32_t) DHT_DATA[2]; // humidity (%)
 
@@ -63,34 +65,30 @@ void adc_read_update(esp_adc_cal_characteristics_t * config) {
 
 void bluetoothify(const uint32_t data[], int data_len) { // TODO: Add name, type parameters, better protocol
     // Allocate space
-    uint8_t serialized[64];
+    uint8_t serialized[64] = {0};
     int j = 0; // Need external counter
-    uint32_t curr;
-    uint32_t mask = 0xFF; // Bottom 8 bits
+    /*uint32_t curr;
+    uint32_t mask = 0xFF;*/ // Bottom 8 bits
 
-    /*for( ; i < 3; i++) {
-        serialized[i] = NAME[i];
-    }
 
-    serialized[i++] = '_';*/
-    do { // Go through all data
+    /*do { // Go through all data
         curr = data[j];
-        printf("curr = %u\n", curr);
+        //printf("curr = %u\n", curr);
         for(int i = 0; i < 4; i++) { // Shift and mask
             serialized[i] = curr & mask;
             curr >>= 8;
         }
         j++;
-    } while(j < data_len);
+    } while(j < data_len);*/
 
-    /*serialized[i++] = '_';
+    uint8_t * p = (uint8_t *) data;
+    uint8_t * last = p + (32 * data_len);
+    while(p < last) {
+        serialized[j++] = *p;
+        p++;
+    }
 
-    for(int j = 0; j < 3; j++, i++) {
-        serialized[i] = NAME[j];
-    }*/
-    /*for(int k = 0; k < 4 * data_len; k++) {
-        printf("data[%d] = %d\n", k, serialized[k]);
-    }*/
+    //printf("%u %u\n", serialized[0], serialized[4]);
 
     rsp_dat.len = 4 * data_len;
     memcpy(rsp_dat.dat, serialized, rsp_dat.len);

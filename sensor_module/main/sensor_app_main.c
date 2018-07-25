@@ -29,17 +29,27 @@ sensor_dat_t rsp_dat = {
         .dat = {0}
 };
 
+void sense(void * empty_arg) {
+    //esp_adc_cal_characteristics_t * config = adc_setup(); // Our dummy "sensor"
+
+    for(;;) {
+        //adc_read_update(config);
+        temp_humidity();
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
+    }
+}
+
 void app_main()
 {
     bt_setup();
     //esp_adc_cal_characteristics_t * config = adc_setup(); // Our dummy "sensor"
                  // Using ADC for testing, reads voltage off of potentiometer
     setDHTPin(18);
-
-    for(;;) {
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
-
-        //adc_read_update(config);
-        temp_humidity();
-    }
+    xTaskCreate(
+            sense,
+            "MAIN_TASK",
+            4000, // stack size
+            NULL,
+            1, //Priority, slightly higher than idle
+            NULL);
 }
