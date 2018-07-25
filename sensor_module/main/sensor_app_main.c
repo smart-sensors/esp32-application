@@ -30,11 +30,11 @@ sensor_dat_t rsp_dat = {
 };
 
 void sense(void * empty_arg) {
-    //esp_adc_cal_characteristics_t * config = adc_setup(); // Our dummy "sensor"
+    esp_adc_cal_characteristics_t * config = adc_setup(); // Our dummy "sensor"
 
     for(;;) {
-        //adc_read_update(config);
-        temp_humidity();
+        adc_read_update(config);
+        //temp_humidity();
         vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
 }

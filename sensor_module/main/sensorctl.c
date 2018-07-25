@@ -52,15 +52,24 @@ esp_adc_cal_characteristics_t * adc_setup() {
 }
 
 void adc_read_update(esp_adc_cal_characteristics_t * config) {
-    uint32_t reading = 0;
+    uint32_t reading1 = 0, reading2 = 0;
     // Sample & average
     for(int i = 0; i < SAMPLES; i++) {
-        reading += adc1_get_raw((adc_channel_t)ADC_CHANNEL_6);
+        reading1 += adc1_get_raw((adc_channel_t)ADC_CHANNEL_6);
+        reading2 += adc1_get_raw((adc_channel_t)ADC_CHANNEL_7);
     }
-    reading /= SAMPLES; // Avg data
-    uint32_t milis = esp_adc_cal_raw_to_voltage(reading, config);
+    reading1 /= SAMPLES; // Avg data
+    reading2 /= SAMPLES;
 
-    bluetoothify(&milis, 1);
+    uint32_t milis1 = esp_adc_cal_raw_to_voltage(reading1, config);
+    uint32_t milis2 = esp_adc_cal_raw_to_voltage(reading2, config);
+
+    uint32_t dat[2] = {0};
+    dat[0] = milis1;
+    dat[1] = milis2;
+
+
+    bluetoothify(dat, 2);
 }
 
 void bluetoothify(const uint32_t data[], int data_len) { // TODO: Add name, type parameters, better protocol
